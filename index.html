@@ -105,7 +105,8 @@ td:not(:first-child){white-space:nowrap}
 .sheet.slip .sig div i{top:62px}
 .sheet.slip .sig small{position:absolute;left:28px;right:28px;top:66px;font-size:12px;color:#3A4A66}
 .sheet.slip .thanks{margin-top:14px}
-.sbox{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.sbox{overscroll-behavior:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.sbox.canscroll{overflow-y:auto}
 .sbox th{position:sticky;top:0;background:var(--panel);z-index:1}
 .sbox.tblwrap{overflow-x:auto}
 .cnt{color:var(--muted);font-weight:600;font-size:14px}
@@ -486,7 +487,7 @@ function fitLists(){
   const bar=document.querySelector('aside'),barH=(bar&&getComputedStyle(bar).position==='fixed')?bar.offsetHeight:0;
   const vw=$('view'),avail=Math.max(280,Math.min(viewH()-barH-70,(vw?vw.clientHeight:99999)-8));
   document.querySelectorAll('.sbox[data-rows]').forEach(b=>{
-    b.style.maxHeight='';
+    b.style.maxHeight='';b.classList.remove('canscroll');
     if(b.getClientRects().length===0)return;
     const n=+b.dataset.rows,els=[...b.querySelectorAll(b.dataset.sel||':scope > *')].filter(e=>!e.classList.contains('empty')&&e.getClientRects().length);
     const rows=els.filter(e=>!e.querySelector('th'));
@@ -496,7 +497,7 @@ function fitLists(){
     for(let i=0;i<lim;i++){if(rows[i].getBoundingClientRect().bottom-top+2<=avail)take=i+1;else break}
     take=Math.max(take,Math.min(2,rows.length));
     if(rows.length<=take)return;
-    b.style.maxHeight=Math.ceil(rows[take-1].getBoundingClientRect().bottom-top+2)+'px';
+    b.style.maxHeight=Math.ceil(rows[take-1].getBoundingClientRect().bottom-top+2)+'px';b.classList.add('canscroll');
   });
 }
 let _fw=window.innerWidth;window.addEventListener('resize',()=>{if(window.innerWidth!==_fw){_fw=window.innerWidth;fitLists()}});
@@ -2081,7 +2082,7 @@ function showUpdateBar(){
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();window.__pwaPrompt=e});
 window.addEventListener('appinstalled',()=>{window.__pwaPrompt=null});
 function pwaInstall(){const e=window.__pwaPrompt;if(!e)return;e.prompt();e.userChoice.finally(()=>{window.__pwaPrompt=null;render()})}
-const BUILD='2026-11-09.5';
+const BUILD='2026-11-09.6';
 function installPanel(){
   const web=window.isSecureContext&&/^https?:/.test(location.protocol);
   return `<div class="panel"><h2>Установить как приложение</h2><p class="note" style="margin-top:0">На телефоне: меню браузера, затем «Установить приложение» или «Добавить на главный экран». На компьютере: значок установки в адресной строке Chrome или Edge. Работает, когда программа открыта по обычному адресу сайта (https).${web?'':' Сейчас программа открыта как файл, установка недоступна.'}</p>${window.__pwaPrompt?'<div class="row"><button class="btn" onclick="pwaInstall()">Установить</button></div>':''}<p class="note">Версия программы: ${BUILD}</p><div class="row" style="justify-content:flex-start"><button class="btn ghost" onclick="checkUpdate(true)">Проверить обновление</button></div></div>`;
