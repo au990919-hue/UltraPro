@@ -110,9 +110,10 @@ td:not(:first-child){white-space:nowrap}
 #view.fixlayout{display:flex;flex-direction:column;overflow:hidden;padding-bottom:10px}
 #cash-body{display:contents}
 #cash-mini{margin:2px 0 8px;font-size:13px}
-#rep-top{flex:0 1 auto;min-height:0;max-height:calc(100% - 200px);overflow-y:auto;overscroll-behavior:auto}
-#rep-body{flex:1 1 0;min-height:200px;overflow-y:auto;overscroll-behavior:auto;padding-bottom:24px}
-@media (max-height:1000px){#rep-top{max-height:46%}}
+#rep-top,#an-pin,#sal-top{flex:0 1 auto;min-height:0;max-height:calc(100% - 200px);overflow-y:auto;overscroll-behavior:auto}
+#rep-body,#an-body,#sal-body{flex:1 1 0;min-height:200px;overflow-y:auto;overscroll-behavior:auto;padding-bottom:24px}
+@media (max-height:1000px){#rep-top,#an-pin,#sal-top{max-height:46%}}
+.cl-reps{max-height:min(340px,55vh);overflow-y:auto;overscroll-behavior:auto;margin-top:6px}
 #cash-top{flex:0 1 auto;min-height:0;max-height:calc(100% - 260px);overflow-y:auto;overscroll-behavior:auto}
 #cash-bottom{flex:1 1 0;min-height:230px;display:flex;flex-direction:column}
 #cash-bottom .cashhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex:none}
@@ -573,7 +574,7 @@ function render(){
   badge();
   $('title').textContent=PAGES[state.page];
   const a=$('actions'),v=$('view');a.innerHTML='';
-  const P=state.page;v.classList.toggle('fixlayout',P==='cash'||P==='reports');
+  const P=state.page;v.classList.toggle('fixlayout',['cash','reports','analytics','salary'].includes(P));
   if(P==='orders'){a.innerHTML='<button class="btn" onclick="newOrder()">Новый заказ</button>';v.innerHTML=ordersView()}
   if(P==='clients')v.innerHTML=clientsView();
   if(P==='stock'){a.innerHTML='<button class="btn" onclick="sellPart()">Продажа</button> <button class="btn ghost" onclick="newPart()">Добавить запчасть</button>';v.innerHTML=stockView()}
@@ -843,10 +844,10 @@ function cliCard(c){
   const st=(a,b)=>`<div class="mini"><b>${b}</b><span>${a}</span></div>`;
   return `<div class="cl"><div class="h"><b>${esc(c.name)}</b><span>${esc(c.phone)}</span></div>
     <div class="minis">${st('Ремонтов',`${list.length}${iss.length!==list.length?` (выдано ${iss.length})`:''}`)}${st('Оплачено',money(paid))}${openSum?st('В работе на сумму',money(openSum)):''}${iss.length?st('Средний чек',money(Math.round(paid/iss.length))):''}${own&&iss.length?st('Прибыль с клиента',sign(profit)):''}${st('Первый визит',dmy(dates[0]))}${st('Последний визит',dmy(dates[dates.length-1]))}${act?st('Действующих гарантий',act):''}</div>
-    ${list.map(o=>{
+    <div class="cl-reps">${list.map(o=>{
       const sc=STATUSES.find(x=>x.n===o.status),rp=o.work?esc(o.work):`<span class="note">${esc(o.defects.filter(Boolean).join(', ')||'—')}</span>`;
       return `<details class="rep" ontoggle="if(this.open)drawCliPhotos(${o.id})"><summary><div><span class="chev">▸</span> <b>${esc(o.device)}</b><div>${rp}</div><div class="note">${dmy(o.date)} · <span class="pill" style="--pc:${sc.c}">${o.status}</span></div>${o.comment?`<div class="note">Комментарий: ${esc(o.comment)}</div>`:''}</div><div>${o.price?money(o.price):'—'}</div></summary>${cliDetail(o)}</details>`;
-    }).join('')}</div>`;
+    }).join('')}</div></div>`;
 }
 function clientsList(){
   const f=state.df.clients,map={};
@@ -1748,14 +1749,14 @@ function salaryView(){
   const ym=state.salMonth,list=state.staff.filter(m=>m.role!=='Владелец'&&!m.off).map(m=>({m,c:payCalc(m,ym)}));
   const tot={acc:sumBy(list,r=>r.c.accrued),paid:sumBy(list,r=>r.c.paid),due:sumBy(list,r=>r.c.due)};
   const row=(t,v,cls)=>`<div class="prow ${cls||''}"><span>${t}</span><span class="nw">${v}</span></div>`;
-  return `<div class="filters"><div><label>Месяц</label><input type="month" value="${ym}" onchange="setSalMonth(this.value)"></div><div style="flex:0 0 auto;display:flex;gap:6px"><button class="btn ghost" onclick="shiftSal(-1)">Раньше</button><button class="btn ghost" onclick="shiftSal(1)">Позже</button></div></div>
+  return `<div id="sal-top"><div class="filters"><div><label>Месяц</label><input type="month" value="${ym}" onchange="setSalMonth(this.value)"></div><div style="flex:0 0 auto;display:flex;gap:6px"><button class="btn ghost" onclick="shiftSal(-1)">Раньше</button><button class="btn ghost" onclick="shiftSal(1)">Позже</button></div></div>
   <h2>${monthLabel(ym)}</h2>
-  <div class="stats"><div class="stat"><b>${money(tot.acc)}</b><span>начислено</span></div><div class="stat"><b>${money(tot.paid)}</b><span>выплачено (авансы и выплаты)</span></div><div class="stat"><b class="${tot.due>0?'minus':''}">${money(tot.due)}</b><span>к выплате</span></div></div>
+  <div class="stats"><div class="stat"><b>${money(tot.acc)}</b><span>начислено</span></div><div class="stat"><b>${money(tot.paid)}</b><span>выплачено (авансы и выплаты)</span></div><div class="stat"><b class="${tot.due>0?'minus':''}">${money(tot.due)}</b><span>к выплате</span></div></div></div><div id="sal-body">
   ${list.map(({m,c})=>`<div class="item"><div class="ttl">${esc(m.name)} · ${esc(roleName(m))}</div>
     ${row('Оклад',money(c.salary))}${row(`Ремонты (${c.repairs.length} шт.)`,money(c.rs))}${row(`Продажа телефонов (${c.phones.length} шт.)`,money(c.ps))}${row(`Продажа аксессуаров (${c.accs.length} шт.)`,money(c.as))}${row('Бонусы','+'+money(c.bonus))}${row('Штрафы','−'+money(c.fine))}
     ${row('Начислено',money(c.accrued),'tot')}${row('Выплачено',money(c.paid))}${row('К выплате',money(c.due),'tot')}
     <div class="btns"><button class="btn sm ghost" onclick="payDetails(${m.id})">Подробнее</button><button class="btn sm ghost" onclick="adjForm(${m.id})">Бонус, штраф или аванс</button>${c.due>0?`<button class="btn sm" onclick="payAsk(${m.id})">Выплатить ${money(c.due)}</button>`:''}<button class="btn sm ghost" onclick="staffForm(${m.id})">Настроить оплату</button></div></div>`).join('')||'<div class="empty">Нет сотрудников. Добавьте их в Настройках.</div>'}
-  <p class="note">Проценты считаются по заказам со статусом «Выдан», выданным в этом месяце. Оплата настраивается у каждого сотрудника в Настройках.</p>`;
+  <p class="note">Проценты считаются по заказам со статусом «Выдан», выданным в этом месяце. Оплата настраивается у каждого сотрудника в Настройках.</p></div>`;
 }
 function payDetails(id){
   const m=state.staff.find(x=>x.id===id),c=payCalc(m,state.salMonth);
@@ -2099,7 +2100,7 @@ function showUpdateBar(){
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();window.__pwaPrompt=e});
 window.addEventListener('appinstalled',()=>{window.__pwaPrompt=null});
 function pwaInstall(){const e=window.__pwaPrompt;if(!e)return;e.prompt();e.userChoice.finally(()=>{window.__pwaPrompt=null;render()})}
-const BUILD='2026-11-09.8';
+const BUILD='2026-11-09.9';
 function installPanel(){
   const web=window.isSecureContext&&/^https?:/.test(location.protocol);
   return `<div class="panel"><h2>Установить как приложение</h2><p class="note" style="margin-top:0">На телефоне: меню браузера, затем «Установить приложение» или «Добавить на главный экран». На компьютере: значок установки в адресной строке Chrome или Edge. Работает, когда программа открыта по обычному адресу сайта (https).${web?'':' Сейчас программа открыта как файл, установка недоступна.'}</p>${window.__pwaPrompt?'<div class="row"><button class="btn" onclick="pwaInstall()">Установить</button></div>':''}<p class="note">Версия программы: ${BUILD}</p><div class="row" style="justify-content:flex-start"><button class="btn ghost" onclick="checkUpdate(true)">Проверить обновление</button></div></div>`;
@@ -2599,22 +2600,25 @@ function anClients(d){
   return `<h3>Новые и постоянные клиенты</h3>${pie([{label:'Новые',val:nNew,fmt:nNew+' чел.'},{label:'Приходили раньше',val:nOld,fmt:nOld+' чел.'}])}
     <h3>Кто приносит больше всего денег</h3>${bars(top.map(x=>({label:esc(x.name),val:x.v,sub:`Ремонтов: ${x.n}`})),tt,money)}`;
 }
-function analyticsBody(){
+function analyticsParts(){
   const f=state.df.an,cur=anCollect(f),k=anKpi(cur),pr=anPrevRange(f),pk=pr?anKpi(anCollect(pr)):null;
   const card=(t,v,c,p)=>`<div class="stat"><span>${t}</span><b>${v}</b>${pk?`<span>${dlt(c,p)} <span class="note">к прошлому периоду</span></span>`:''}</div>`;
   const sec=(t,html,open)=>`<details class="an" ${open?'open':''}><summary>${t}</summary>${html}</details>`;
-  return `<div class="stats">${card('Выручка (с учётом возвратов)',money(k.rev),k.rev,pk&&pk.rev)}${card('Прибыль',sign(k.profit),k.profit,pk&&pk.profit)}${card('Выдано ремонтов',k.rep,k.rep,pk&&pk.rep)}${card('Продаж',k.sales,k.sales,pk&&pk.sales)}${card('Средний чек ремонта',money(k.avg),k.avg,pk&&pk.avg)}${card('Возвратов',`${k.rets} (${fp(k.rate)})`,k.rets,pk&&pk.rets)}</div>
-    ${pr?`<p class="note">Сравнение: ${dmy(pr.from)} — ${dmy(pr.to)}.</p>`:'<p class="note">Выберите даты «С» и «По» (или быстрый период), чтобы увидеть сравнение с прошлым таким же периодом.</p>'}
-    ${sec('Динамика',anSeries(cur,f),true)}${sec('Загрузка по дням недели',anWeekday(cur),false)}${sec('Ремонты',anRepairs(cur),true)}${sec('Запчасти',anParts(cur),false)}${sec('Продажи',anSales(cur),true)}${sec('Возвраты',anReturns(cur),true)}${sec('Люди',anPeople(cur),true)}${sec('Клиенты',anClients(cur),false)}`;
+  const top=`<div class="stats">${card('Выручка (с учётом возвратов)',money(k.rev),k.rev,pk&&pk.rev)}${card('Прибыль',sign(k.profit),k.profit,pk&&pk.profit)}${card('Выдано ремонтов',k.rep,k.rep,pk&&pk.rep)}${card('Продаж',k.sales,k.sales,pk&&pk.sales)}${card('Средний чек ремонта',money(k.avg),k.avg,pk&&pk.avg)}${card('Возвратов',`${k.rets} (${fp(k.rate)})`,k.rets,pk&&pk.rets)}</div>
+    ${pr?`<p class="note">Сравнение: ${dmy(pr.from)} — ${dmy(pr.to)}.</p>`:'<p class="note">Выберите даты «С» и «По» (или быстрый период), чтобы увидеть сравнение с прошлым таким же периодом.</p>'}`;
+  const rest=`${sec('Динамика',anSeries(cur,f),true)}${sec('Загрузка по дням недели',anWeekday(cur),false)}${sec('Ремонты',anRepairs(cur),true)}${sec('Запчасти',anParts(cur),false)}${sec('Продажи',anSales(cur),true)}${sec('Возвраты',anReturns(cur),true)}${sec('Люди',anPeople(cur),true)}${sec('Клиенты',anClients(cur),false)}`;
+  return {top,rest};
 }
-function anSearch(v){state.an.q=v;$('an-body').innerHTML=analyticsBody()}
+function analyticsBody(){const p=analyticsParts();return p.top+p.rest}
+function anSearch(v){state.an.q=v;const p=analyticsParts(),k=$('an-kpi'),b=$('an-body');if(k&&b){k.innerHTML=p.top;b.innerHTML=p.rest}}
 function analyticsView(){
   const mst=state.staff.filter(m=>!m.off);
-  return `<p class="note" style="margin-top:0">Вся статистика по сервису: ремонты, продажи, запчасти, возвраты и люди. Данные считаются по выбранному периоду, поиск и мастер сужают всё сразу.</p>
+  const parts=analyticsParts();
+  return `<div id="an-pin"><p class="note" style="margin-top:0">Вся статистика по сервису: ремонты, продажи, запчасти, возвраты и люди. Данные считаются по выбранному периоду, поиск и мастер сужают всё сразу.</p>
     ${dateBar('an',[['month','Этот месяц'],['pmonth','Прошлый месяц'],['year','Этот год']])}
     <div class="filters"><div><label>Мастер или продавец</label><select onchange="state.an.master=this.value;render()"><option value="">Все</option>${mst.map(m=>`<option value="${m.id}" ${String(m.id)===String(state.an.master)?'selected':''}>${esc(m.name)}</option>`).join('')}</select></div></div>
     <div class="search"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Поиск по модели, услуге, запчасти, клиенту или мастеру" value="${attr(state.an.q)}" oninput="anSearch(this.value)" autocomplete="off" aria-label="Поиск"></div>
-    <div id="an-body">${analyticsBody()}</div>`;
+    <div id="an-kpi">${parts.top}</div></div><div id="an-body">${parts.rest}</div>`;
 }
 /* ---------- несколько услуг и мастеров в одном заказе ---------- */
 const itemsOf=o=>(o.items&&o.items.length)?o.items:[{id:0,service:o.service||0,master:o.master,price:o.price}];
