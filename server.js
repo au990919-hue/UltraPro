@@ -138,7 +138,7 @@ function staffRule(u, S, o, cur) {
       if (isNew) return true;
       if (o.op === 'del') return cur.status === 'Принят' && allow('delOrder');
       const ch = diffKeys(cur, v);
-      if (cur.status === 'Выдан') return ch.every(k => k === 'comment');
+      if (cur.status === 'Выдан') return ch.every(k => k === 'comment') && (!ch.length || allow(null));   // комментарий выданного заказа: только после ввода кода владельца
       if (JSON.stringify(cur.items || null) !== JSON.stringify(v.items || null)) {      // услуги и мастера
         if (!['Принят','Диагностика','В работе'].includes(cur.status)) return false;     // после «Готов» услуги не меняют
         const sum = a => (a || []).reduce((t, i) => t + (+i.price || 0), 0);
