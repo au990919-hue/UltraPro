@@ -813,7 +813,7 @@ function back(id){
 function newOrder(){
   $('dlg').innerHTML=`<h2>Приёмка на ремонт</h2>
     <label>Имя клиента</label><input id="f-client" oninput="clientHint()">
-    <label>Телефон клиента</label><input id="f-phone" type="tel" inputmode="tel" value="+998" oninput="clientHint()"><div id="f-hint"></div>
+    <label>Телефон клиента</label><input id="f-phone" type="tel" inputmode="tel" value="+998" oninput="clientHint()" onchange="clientHint()" onblur="clientHint()" onpaste="setTimeout(clientHint,0)"><div id="f-hint"></div>
     <label>Модель телефона</label><input id="f-device" placeholder="Например, iPhone 12">
     <div class="two"><div><label>IMEI (по желанию)</label><input id="f-imei" inputmode="numeric" maxlength="17" placeholder="15 цифр"></div><div><label>IMEI 2 (по желанию)</label><input id="f-imei2" inputmode="numeric" maxlength="17"></div></div>
     ${PH.ok?`<label>Фото телефона (по желанию)</label><div id="f-photos" class="thumbs"></div><div class="row" style="justify-content:flex-start;margin-top:6px"><button class="btn sm ghost" onclick="pickPhotos('f')">Добавить фото</button></div>`:''}
@@ -2147,7 +2147,7 @@ function showUpdateBar(){
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();window.__pwaPrompt=e});
 window.addEventListener('appinstalled',()=>{window.__pwaPrompt=null});
 function pwaInstall(){const e=window.__pwaPrompt;if(!e)return;e.prompt();e.userChoice.finally(()=>{window.__pwaPrompt=null;render()})}
-const BUILD='2026-11-10.4';
+const BUILD='2026-11-10.5';
 function installPanel(){
   const web=window.isSecureContext&&/^https?:/.test(location.protocol);
   return `<div class="panel"><h2>Установить как приложение</h2><p class="note" style="margin-top:0">На телефоне: меню браузера, затем «Установить приложение» или «Добавить на главный экран». На компьютере: значок установки в адресной строке Chrome или Edge. Работает, когда программа открыта по обычному адресу сайта (https).${web?'':' Сейчас программа открыта как файл, установка недоступна.'}</p>${window.__pwaPrompt?'<div class="row"><button class="btn" onclick="pwaInstall()">Установить</button></div>':''}<p class="note">Версия программы: ${BUILD}</p><div class="row" style="justify-content:flex-start"><button class="btn ghost" onclick="checkUpdate(true)">Проверить обновление</button></div></div>`;
@@ -3265,7 +3265,7 @@ function knownClients(phone){
   const d=phoneDigits(phone);if(d.length<9)return [];
   const tail=d.slice(-9),map=new Map();
   state.orders.forEach(o=>{
-    const od=phoneDigits(o.phone);if(od.length<9||od.slice(-9)!==tail)return;
+    const od=phoneDigits(o.phone);if(od.length<9||!(od.slice(-9)===tail||od.includes(tail)))return;
     const k=(o.client||'').trim();if(!k)return;
     const e=map.get(k)||{name:k,n:0,last:'',dev:''};e.n++;if(!e.last||o.date>e.last){e.last=o.date;e.dev=o.device}map.set(k,e);
   });
