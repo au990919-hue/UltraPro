@@ -9,7 +9,7 @@ const DATA = process.env.DATA_FILE || path.join(DIR, 'data.json');
 const BACK = path.join(path.dirname(DATA), 'backups');
 const TRUST = process.env.TRUST_PROXY === '1';
 const OWNER = 'Владелец';
-const ARR = ['orders','parts','phones','acc','accSales','stockSales','cash','staff','contacts','suppliers','services','adjust','log','returns','writeoffs','cancellations','notes','slips','price'];
+const ARR = ['orders','parts','phones','acc','accSales','stockSales','cash','staff','contacts','suppliers','services','adjust','log','returns','writeoffs','cancellations','notes','slips','price','cnotes'];
 const FLOOR = {orders:'nextId', cash:'nextCash', staff:'nextStaff'};
 const SESSION_MS = 30 * 864e5, OV_MS = 300e3;
 const SCHEMA = 1;   // версия структуры данных
@@ -127,6 +127,9 @@ function staffRule(u, S, o, cur) {
       return cur.private ? (S.m.noteUntil || 0) > Date.now() : true;
     }
     case 'price': return allow('pricelist');
+    case 'cnotes':
+      if (isNew) { o.v.by = u.id; return true; }
+      return !!cur && cur.by === u.id;
     case 'slips':
       if (isNew) { o.v.by = u.id; return true; }
       return !!cur && (cur.by === u.id || allow('cancelSale'));
