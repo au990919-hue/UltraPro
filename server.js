@@ -204,12 +204,14 @@ function applyOps(u, S, ops) {
       rejected.push({c:o.c, id:o.id, reason:'нет прав'}); return;
     }
     if (o.c === 'staff') {
-      if (o.op === 'del' ) { rejected.push({c:o.c, id:o.id, reason:'сотрудников не удаляют, а отключают'}); return; }
-      delete o.v.pass; delete o.v._pw;
-      if (cur && cur.role === OWNER) o.v.role = OWNER;
-      else if (o.v.role === OWNER) { rejected.push({c:o.c, id:o.id, reason:'владелец один'}); return; }
-      const lg = String(o.v.login || '').toLowerCase();
-      if (lg && db.state.staff.some(m => m.id !== o.id && String(m.login || '').toLowerCase() === lg)) { rejected.push({c:o.c, id:o.id, reason:'логин занят'}); return; }
+      if (o.op === 'del' && (!owner || !cur || cur.role === OWNER)) { rejected.push({c:o.c, id:o.id, reason:'владельца и чужие записи удалять нельзя'}); return; }
+      if (o.op === 'set') {
+        delete o.v.pass; delete o.v._pw;
+        if (cur && cur.role === OWNER) o.v.role = OWNER;
+        else if (o.v.role === OWNER) { rejected.push({c:o.c, id:o.id, reason:'владелец один'}); return; }
+        const lg = String(o.v.login || '').toLowerCase();
+        if (lg && db.state.staff.some(m => m.id !== o.id && String(m.login || '').toLowerCase() === lg)) { rejected.push({c:o.c, id:o.id, reason:'логин занят'}); return; }
+      }
     }
     const i = arr.findIndex(r => r.id === o.id);
     if (o.op === 'del') { if (i >= 0) arr.splice(i, 1); }
