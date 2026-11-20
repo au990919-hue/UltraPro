@@ -179,7 +179,19 @@ table.pl tr.dim td{opacity:.35}
 #rep-body,#an-body,#sal-body{flex:1 1 0;min-height:200px;overflow-y:auto;overscroll-behavior:auto;padding-bottom:24px}
 @media (max-height:1000px){#rep-top,#an-pin,#sal-top{max-height:46%}}
 .cl-reps{max-height:min(340px,55vh);overflow-y:auto;overscroll-behavior:auto;margin-top:6px}
-#cash-top{flex:0 1 auto;min-height:0;max-height:calc(100% - 260px);overflow-y:auto;overscroll-behavior:auto}
+#cash-filters{flex:none}
+.rb{margin-top:6px}
+@media(min-width:700px){#cash-bottom .rb{display:inline-block;margin:0 0 0 10px;vertical-align:middle}}
+#cash-filters .filters{margin-bottom:6px;gap:8px}
+#cash-filters .filters>div{min-width:110px}
+.cf label{display:none}.cf.rng label{display:block;font-size:12px;margin-bottom:2px}
+#cash-top{flex:0 1 auto;min-height:0;max-height:calc(100% - 300px);overflow-y:auto;overscroll-behavior:auto}
+#cash-six.cc .stats.cs6{gap:6px;margin-bottom:8px}
+#cash-six.cc .stats.cs6 .stat{padding:7px 10px}
+#cash-six.cc .stats.cs6 .stat b{font-size:16px;line-height:1.2}
+#cash-six.cc .stats.cs6 .stat .lg{display:none}#cash-six.cc .stats.cs6 .stat .sh{display:inline}
+#cash-six.cc .stats.cs6 .stat span{font-size:11.5px;line-height:1.2}
+#cash-six.cc .stats.cs6 .stat .note{display:none}#cash-six.cc .stats.cs6 .stat .note.now{display:block;font-size:10.5px}
 #cash-bottom{flex:1 1 0;min-height:230px;display:flex;flex-direction:column}
 #cash-bottom .cashhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex:none}
 #cash-bottom .cashhead h2{margin:8px 0}
@@ -1226,7 +1238,7 @@ function cashView(){
   if(f.mode==='month')ctrl=`<div><label>Месяц</label><input type="month" value="${f.month}" onchange="setCF('month',this.value||'${f.month}')"></div>`;
   if(f.mode==='year')ctrl=`<div><label>Год</label><select onchange="setCF('year',+this.value)">${years.map(y=>`<option ${y===f.year?'selected':''}>${y}</option>`).join('')}</select></div>`;
   if(f.mode==='range')ctrl=`<div><label>С даты</label><input type="date" value="${f.from}" onchange="setCF('from',this.value)"></div><div><label>По дату</label><input type="date" value="${f.to}" onchange="setCF('to',this.value)"></div>`;
-  const filters=`<div class="filters"><div><label>Показать</label><select onchange="setCF('mode',this.value)">${[['month','Месяц'],['year','Год'],['range','Свой период'],['all','Всё время']].map(([v,t])=>`<option value="${v}" ${f.mode===v?'selected':''}>${t}</option>`).join('')}</select></div>${ctrl}${f.mode==='month'||f.mode==='year'?'<div style="flex:0 0 auto;display:flex;gap:6px"><button class="btn ghost" onclick="shiftCF(-1)">Раньше</button><button class="btn ghost" onclick="shiftCF(1)">Позже</button></div>':''}</div>`;
+  const filters=`<div class="filters cf ${f.mode==='range'?'rng':''}"><div><label>Показать</label><select onchange="setCF('mode',this.value)">${[['month','Месяц'],['year','Год'],['range','Свой период'],['all','Всё время']].map(([v,t])=>`<option value="${v}" ${f.mode===v?'selected':''}>${t}</option>`).join('')}</select></div>${ctrl}${f.mode==='month'||f.mode==='year'?'<div style="flex:0 0 auto;display:flex;gap:6px"><button class="btn ghost" onclick="shiftCF(-1)">Раньше</button><button class="btn ghost" onclick="shiftCF(1)">Позже</button></div>':''}</div>`;
   const parts=cashParts(),col=cashCollapsed();
   const tot=cashSum(perAll),pb=cashBal(perAll),ab=cashBal(all.filter(c=>c.date<=today()));
   const inOut=pred=>{let i=0,o=0;perAll.filter(pred).forEach(c=>{if(c.sum>0)i+=c.sum;else o-=c.sum});return `приход ${money(i)} · расход ${money(o)}`};
@@ -1234,9 +1246,9 @@ function cashView(){
   const st=(v,lg,sh,extra)=>`<div class="stat">${v}<span><i class="lg">${lg}</i><i class="sh">${sh}</i></span>${extra||''}</div>`;
   const six=`<div class="stats cs6">${st(`<b class="plus">${money(tot.inc)}</b>`,'приход: ремонты, продажи, ручной приход','Приход')}${st(`<b class="minus">${money(tot.exp)}</b>`,'расход: закупки товара, зарплаты, аренда и другое','Расход')}${st(sign(tot.net),'чистыми осталось (приход минус расход)','Чистыми осталось')}</div>
     <div class="stats cs6">${st(`<b>${money(pb.total)}</b>`,'денег на кассе','Денег на кассе',`<div class="note">наличные + карта + перевод</div>${now(pb.total,ab.total)}`)}${st(`<b>${money(pb.cash)}</b>`,'наличными','Наличными',`<div class="note">${inOut(c=>methodOf(c)==='cash')}</div>${now(pb.cash,ab.cash)}`)}${st(`<b>${money(pb.noncash)}</b>`,'на карте и переводом','Карта / перевод',`<div class="note">карта ${money(pb.card)} · перевод ${money(pb.transfer)}</div>${now(pb.noncash,ab.noncash)}`)}</div>`;
-  return `<div id="cash-body"><div id="cash-top"><div id="cash-full" ${col?'hidden':''}>${filters}<h2>${title}</h2></div>
+  return `<div id="cash-body"><div id="cash-filters">${filters}</div><div id="cash-top"><div id="cash-full" ${col?'hidden':''}><h2>${title}</h2></div>
     <div id="cash-mini" class="note" ${col?'':'hidden'}>${title}</div>
-    <div id="cash-six">${six}</div>
+    <div id="cash-six" class="${col?'cc':''}">${six}</div>
     <div class="search">${SEARCH_ICON}<input id="q-cash" type="search" placeholder="Поиск: сумма, телефон, модель, товар, клиент, категория" value="${attr(f.q||'')}" oninput="cashSearch(this.value)" autocomplete="off"></div>
     <div id="cash-chips">${parts.chips}</div><div id="cash-topbody" ${col?'hidden':''}>${parts.top}</div></div>
     <div id="cash-bottom">${parts.bottom}</div></div>`;
@@ -2228,7 +2240,7 @@ function showUpdateBar(){
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();window.__pwaPrompt=e});
 window.addEventListener('appinstalled',()=>{window.__pwaPrompt=null});
 function pwaInstall(){const e=window.__pwaPrompt;if(!e)return;e.prompt();e.userChoice.finally(()=>{window.__pwaPrompt=null;render()})}
-const BUILD='2026-11-10.21';
+const BUILD='2026-11-10.22';
 function installPanel(){
   const web=window.isSecureContext&&/^https?:/.test(location.protocol);
   return `<div class="panel"><h2>Установить как приложение</h2><p class="note" style="margin-top:0">На телефоне: меню браузера, затем «Установить приложение» или «Добавить на главный экран». На компьютере: значок установки в адресной строке Chrome или Edge. Работает, когда программа открыта по обычному адресу сайта (https).${web?'':' Сейчас программа открыта как файл, установка недоступна.'}</p>${window.__pwaPrompt?'<div class="row"><button class="btn" onclick="pwaInstall()">Установить</button></div>':''}<p class="note">Версия программы: ${BUILD}</p><div class="row" style="justify-content:flex-start"><button class="btn ghost" onclick="checkUpdate(true)">Проверить обновление</button></div></div>`;
@@ -3048,10 +3060,10 @@ function cashRowHTML(g){
     const o=state.orders.find(x=>x.id===g.order),inc=g.entries.reduce((t,c)=>t+c.sum,0);
     const pills=g.entries.map(c=>`${mPill(c)}${g.entries.length>1?` <span class="note nw">${money(c.sum)}</span>`:''}`).join(' ');
     const lk=o?`${o.device} · ${o.client} · ${o.phone}`:'';
-    return `<tr><td>${dmy(g.date)}</td><td>Заказ №${g.order} выдан${lk?`<div class="note">${esc(lk)}</div>`:''} <span class="pill" style="--pc:#7A8C92">${CASH_CATS.rep}</span> ${pills}${o?`<div style="margin-top:6px"><button class="btn sm ghost" onclick="openOrder(${o.id})">Открыть заказ</button></div>`:''}</td><td class="plus">+${money(inc)}</td></tr>`;
+    return `<tr><td>${dmy(g.date)}</td><td>Заказ №${g.order} выдан${lk?`<div class="note">${esc(lk)}</div>`:''} <span class="pill" style="--pc:#7A8C92">${CASH_CATS.rep}</span> ${pills}${o?`<div class="rb"><button class="btn sm ghost" onclick="openOrder(${o.id})">Открыть заказ</button></div>`:''}</td><td class="plus">+${money(inc)}</td></tr>`;
   }
   const c=g.entry,lk=cashLink(c);
-  return `<tr><td>${dmy(c.date)}</td><td>${esc(c.text)}${c.edited?' <span class="note">(изменено)</span>':''}${lk?`<div class="note">${esc(lk)}</div>`:''} <span class="pill" style="--pc:#7A8C92">${CASH_CATS[cashCat(c)]}</span> ${mPill(c)}<div style="margin-top:6px"><button class="btn sm ghost" onclick="editCash(${c.id})">Изменить</button></div></td><td class="${c.sum>0?'plus':'minus'}">${c.sum>0?'+':'−'}${money(Math.abs(c.sum))}</td></tr>`;
+  return `<tr><td>${dmy(c.date)}</td><td>${esc(c.text)}${c.edited?' <span class="note">(изменено)</span>':''}${lk?`<div class="note">${esc(lk)}</div>`:''} <span class="pill" style="--pc:#7A8C92">${CASH_CATS[cashCat(c)]}</span> ${mPill(c)}<div class="rb"><button class="btn sm ghost" onclick="editCash(${c.id})">Изменить</button></div></td><td class="${c.sum>0?'plus':'minus'}">${c.sum>0?'+':'−'}${money(Math.abs(c.sum))}</td></tr>`;
 }
 /* убрать из кассы служебные записи прежних версий: отмены, обратные записи, расходники отдельной строкой */
 function fixCashLegacy(){
