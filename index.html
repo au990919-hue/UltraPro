@@ -2202,7 +2202,7 @@ function showUpdateBar(){
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();window.__pwaPrompt=e});
 window.addEventListener('appinstalled',()=>{window.__pwaPrompt=null});
 function pwaInstall(){const e=window.__pwaPrompt;if(!e)return;e.prompt();e.userChoice.finally(()=>{window.__pwaPrompt=null;render()})}
-const BUILD='2026-11-10.19';
+const BUILD='2026-11-10.20';
 function installPanel(){
   const web=window.isSecureContext&&/^https?:/.test(location.protocol);
   return `<div class="panel"><h2>Установить как приложение</h2><p class="note" style="margin-top:0">На телефоне: меню браузера, затем «Установить приложение» или «Добавить на главный экран». На компьютере: значок установки в адресной строке Chrome или Edge. Работает, когда программа открыта по обычному адресу сайта (https).${web?'':' Сейчас программа открыта как файл, установка недоступна.'}</p>${window.__pwaPrompt?'<div class="row"><button class="btn" onclick="pwaInstall()">Установить</button></div>':''}<p class="note">Версия программы: ${BUILD}</p><div class="row" style="justify-content:flex-start"><button class="btn ghost" onclick="checkUpdate(true)">Проверить обновление</button></div></div>`;
@@ -4403,17 +4403,41 @@ const WT=[
  {k:['dinamik','kalonka','динамик','колонка'],uz:['Dinamik (kalonka)'],ru:['Динамик (колонка)']},
  {k:['face','faceid','fey','фейс'],uz:['Face ID tiklash xizmati'],ru:['Услуга: восстановление Face ID']}
 ];
-function wtMatch(seg,lang){
+function wtMatch(seg,lang,set){
   const q=String(seg||'').trim().toLowerCase();
   if(q.length<2)return [];
   const out=[];
-  WT.forEach(g=>{
+  (set||WT).forEach(g=>{
     const list=g[lang==='uz'?'uz':'ru'];
     if(g.k.some(k=>k.startsWith(q)))list.forEach(x=>out.push(x));
     else list.forEach(x=>{const l=x.toLowerCase();if(l.startsWith(q)||l.split(/[\s(]+/).some(w=>w.length>1&&w.startsWith(q)))out.push(x)});
   });
   return [...new Set(out)].filter(x=>x.toLowerCase()!==q).slice(0,8);
 }
+/* ---------- шаблоны неисправностей (что не так / что нужно сделать), узбекский и русский ---------- */
+const WDEF=[
+ {k:['display','did','disp','ekran','дисплей','экран'],uz:['Display almashtirish kerak','Display oynasi singan','Display ishlamayapti','Displayda chiziqlar bor','Ekran qora (tasvir yo\'q)'],ru:['Нужно заменить дисплей','Разбито стекло дисплея','Дисплей не работает','Полосы на дисплее','Чёрный экран (нет изображения)']},
+ {k:['kamera','camera','камера'],uz:['Kamera tozalash kerak','Kamera almashtirish kerak','Kamera ishlamayapti','Kamera xira suratga oladi'],ru:['Камеру нужно почистить','Нужно заменить камеру','Камера не работает','Камера снимает размыто']},
+ {k:['batarey','batareya','battery','аккумулятор','батарея','акб'],uz:['Batarey almashtirish kerak','Batarey tez tugaydi','Batarey shishib ketgan','Telefon o\'zi o\'chib qoladi'],ru:['Нужно заменить аккумулятор','Быстро садится батарея','Аккумулятор вздулся','Телефон сам выключается']},
+ {k:['zaryad','zaryadka','usb','charge','заряд','зарядка'],uz:['Zaryad olmayapti','Zaryadka porti tozalash kerak','USB shleyft almashtirish kerak','Zaryad sekin oladi'],ru:['Не заряжается','Почистить разъём зарядки','Нужно заменить шлейф USB','Медленно заряжается']},
+ {k:['mikrafon','mikrofon','mic','микрофон'],uz:['Mikrafon almashtirish kerak','Mikrafon ishlamayapti (suhbatdosh eshitmaydi)'],ru:['Нужно заменить микрофон','Не слышит собеседник (микрофон)']},
+ {k:['dinamik','kalonka','ovoz','динамик','колонка','звук'],uz:['Dinamik almashtirish kerak','Ovoz chiqmayapti','Ovoz past yoki xirillaydi'],ru:['Нужно заменить динамик','Нет звука','Тихий звук или хрипит']},
+ {k:['krishka','orqa','крышка'],uz:['Krishka almashtirish kerak','Orqa oyna singan'],ru:['Нужно заменить крышку','Разбита задняя крышка']},
+ {k:['korpus','корпус'],uz:['Korpus almashtirish kerak','Korpus egilgan','Korpus ezilgan (zarba)'],ru:['Нужно заменить корпус','Корпус погнут','Корпус помят (удар)']},
+ {k:['payka','plata','пайка','плата'],uz:['Plata payka kerak','Plata diagnostikasi kerak','Telefon yonmayapti'],ru:['Нужна пайка платы','Диагностика платы','Телефон не включается']},
+ {k:['suv','вода','намок'],uz:['Suv tushgan','Suvdan keyin ishlamayapti'],ru:['Попала вода','После воды не работает']},
+ {k:['knopka','кнопка'],uz:['Knopka almashtirish kerak','Knopka ishlamayapti','Knopka tiqilib qoladi'],ru:['Нужно заменить кнопку','Кнопка не работает','Кнопка залипает']},
+ {k:['face','faceid','fey','фейс'],uz:['Face ID ishlamayapti','Face ID tiklash kerak'],ru:['Не работает Face ID','Нужно восстановить Face ID']},
+ {k:['sensor','tach','touch','тач','сенсор'],uz:['Sensor (taach) ishlamayapti','Sensor o\'zi bosadi'],ru:['Не работает тач','Тач нажимает сам']},
+ {k:['proshivka','dastur','qotadi','прошивка','зависает'],uz:['Proshivka (dastur) kerak','Telefon qotib qoladi','Telefon qayta-qayta yoqiladi'],ru:['Нужна прошивка','Телефон зависает','Телефон перезагружается']},
+ {k:['tarmoq','sim','wifi','сеть','сим'],uz:['Tarmoq yo\'q (sim ko\'rinmaydi)','Wi-Fi ishlamayapti'],ru:['Нет сети (сим не виден)','Не работает Wi-Fi']},
+ {k:['qizib','qiziydi','греется'],uz:['Telefon qizib ketadi'],ru:['Телефон греется']}
+];
+const WS_CFG={
+  'p-work':{set:()=>WT,lang:()=>state.lang},
+  'p-d1':{set:()=>WDEF,lang:()=>state.lang},'p-d2':{set:()=>WDEF,lang:()=>state.lang},
+  'f-d1':{set:()=>WDEF,lang:()=>state.ui==='uz'?'uz':'ru'},'f-d2':{set:()=>WDEF,lang:()=>state.ui==='uz'?'uz':'ru'}
+};
 const WS={el:null,from:0,to:0};
 function wsCtx(el){
   const val=el.value,pos=el.selectionStart==null?val.length:el.selectionStart,before=val.slice(0,pos);
@@ -4422,10 +4446,13 @@ function wsCtx(el){
 }
 function wsHide(){const p=$('wsug');if(p)p.remove();WS.el=null}
 function wsShow(el){
-  const c=wsCtx(el),list=wtMatch(c.seg,state.lang);
+  const cfg=WS_CFG[el.id];if(!cfg){wsHide();return}
+  const c=wsCtx(el),list=wtMatch(c.seg,cfg.lang(),cfg.set());
   if(!list.length){wsHide();return}
   WS.el=el;WS.from=c.from;WS.to=c.to;
-  let p=$('wsug');if(!p){p=document.createElement('div');p.id='wsug';p.className='wsug noprint';p.setAttribute('role','listbox');document.body.appendChild(p)}
+  const host=el.closest('dialog')||document.body;
+  let p=$('wsug');if(!p){p=document.createElement('div');p.id='wsug';p.className='wsug noprint';p.setAttribute('role','listbox')}
+  if(p.parentNode!==host)host.appendChild(p);
   p.innerHTML=list.map((x,i)=>`<button type="button" class="wsi" role="option" data-i="${i}">${esc(x)}</button>`).join('');
   p._list=list;
   const r=el.getBoundingClientRect(),vv=window.visualViewport,vw=vv?vv.width:innerWidth,bottomLimit=vv?vv.offsetTop+vv.height:innerHeight;
@@ -4440,9 +4467,9 @@ function wsPick(i){
   const pos=WS.from+t.length;el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}
   wsHide();
 }
-document.addEventListener('input',e=>{const t=e.target;if(t&&t.id==='p-work'&&!t.disabled)wsShow(t)});
-document.addEventListener('focusin',e=>{const t=e.target;if(t&&t.id==='p-work'&&!t.disabled)wsShow(t)});
-document.addEventListener('focusout',e=>{if(e.target&&e.target.id==='p-work')setTimeout(()=>{if(document.activeElement!==WS.el)wsHide()},180)});
+document.addEventListener('input',e=>{const t=e.target;if(t&&WS_CFG[t.id]&&!t.disabled)wsShow(t)});
+document.addEventListener('focusin',e=>{const t=e.target;if(t&&WS_CFG[t.id]&&!t.disabled)wsShow(t)});
+document.addEventListener('focusout',e=>{if(e.target&&WS_CFG[e.target.id])setTimeout(()=>{if(document.activeElement!==WS.el)wsHide()},180)});
 document.addEventListener('mousedown',e=>{const b=e.target.closest&&e.target.closest('#wsug .wsi');if(b){e.preventDefault();wsPick(+b.dataset.i)}});
 document.addEventListener('touchstart',e=>{const b=e.target.closest&&e.target.closest('#wsug .wsi');if(b){e.preventDefault();wsPick(+b.dataset.i)}},{passive:false});
 document.addEventListener('keydown',e=>{
