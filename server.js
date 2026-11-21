@@ -9,7 +9,7 @@ const DATA = process.env.DATA_FILE || path.join(DIR, 'data.json');
 const BACK = path.join(path.dirname(DATA), 'backups');
 const TRUST = process.env.TRUST_PROXY === '1';
 const OWNER = 'Владелец';
-const ARR = ['orders','parts','phones','acc','accSales','stockSales','cash','staff','contacts','suppliers','services','adjust','log','returns','writeoffs','cancellations','notes','slips','price','cnotes'];
+const ARR = ['orders','parts','phones','acc','accSales','stockSales','cash','staff','contacts','suppliers','services','adjust','log','returns','writeoffs','cancellations','notes','slips','price','cnotes','sched','priv'];
 const FLOOR = {orders:'nextId', cash:'nextCash', staff:'nextStaff'};
 const SESSION_MS = 30 * 864e5, OV_MS = 300e3;
 const SCHEMA = 1;   // версия структуры данных
@@ -106,6 +106,7 @@ function view(u) {
   out.set = s.set || {}; out.pinSet = !!db.pin;
   if (u.role === OWNER) return out;
   out.log = [];
+  out.priv = [];   // личные расходы владельца сотрудникам не отдаются
   out.notes = (s.notes || []).map(n => n.private ? {id:n.id, date:n.date, ts:n.ts, by:n.by, private:true, locked:true} : n);   // закрытые заметки сотрудникам не отдаются
   out.adjust = (s.adjust || []).filter(a => a.staffId === u.id);
   out.staff = (s.staff || []).map(m => m.id === u.id ? m : {id:m.id, name:m.name, role:m.role, roleTitle:m.roleTitle, off:m.off});
