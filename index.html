@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Сервис: учёт ремонтов</title>
+<title>Сервис: учёт ремонтов · by ULA Product</title>
 <style>
 :root{
   --bg:#EDF1F2; --panel:#FFFFFF; --ink:#14262B; --muted:#5E7178; --line:#D8E0E3;
@@ -87,6 +87,10 @@ td:not(:first-child){white-space:nowrap}
 .btn.danger{background:var(--bad);color:#fff}
 .syncb{font-size:12px;margin-left:6px}
 .amp{color:var(--brand)}
+.brand .credit{display:block;margin-top:5px;font-size:10.5px;font-weight:600;letter-spacing:.1em;color:var(--side-ink);opacity:.62}
+.credit-top{margin-left:auto;font-size:11px;font-weight:600;letter-spacing:.06em;opacity:.7;white-space:nowrap}
+.credit-login{text-align:center;margin-top:6px;font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--muted)}
+@media(max-width:520px){.who{flex-wrap:wrap}}
 .stats.cs6{grid-template-columns:repeat(3,minmax(0,1fr))}
 .stats.cs6 .stat .sh{display:none}.stats.cs6 .stat i{font-style:normal}
 .stats.cs6 .stat .note{margin-top:2px;font-size:12px}
@@ -649,7 +653,7 @@ const expSum=o=>(o.exp||[]).reduce((t,e)=>t+e.qty*e.cost,0);
 function renderBrand(){
   const s=state.set;
   document.documentElement.style.setProperty('--brand',s.color);
-  $('brand').innerHTML = s.logo ? `<img src="${attr(s.logo)}" alt="${attr(s.name)}">` : `${brandTxt(s.name)}<small>учёт ремонтов</small>`;
+  $('brand').innerHTML = (s.logo ? `<img src="${attr(s.logo)}" alt="${attr(s.name)}">` : `${brandTxt(s.name)}<small>учёт ремонтов</small>`)+`<div class="credit">${CREDIT}</div>`;
 }
 const BOTTOM=['mysalary','contacts','log','settings'];
 function renderNav(){
@@ -684,7 +688,7 @@ function render(){
   if(OWNER_ONLY.includes(state.page)&&!isOwner())state.page='orders';
   if(state.page==='mysalary'&&(isOwner()||state.gateOk!=='mysalary'))state.page='orders';
   renderBrand();renderNav();
-  $('whobar').innerHTML=`<span>Вы: <b>${esc(staffName(state.me))}</b> (${esc(roleName(meUser()||{role:''}))})</span> <button class="linkbtn" onclick="logout()">Выйти</button> <span class="lang"><button class="${state.ui==='ru'?'on':''}" onclick="setUI('ru')">RU</button><button class="${state.ui==='uz'?'on':''}" onclick="setUI('uz')">UZ</button></span> <span id="syncBadge" class="syncb"></span>`;
+  $('whobar').innerHTML=`<span>Вы: <b>${esc(staffName(state.me))}</b> (${esc(roleName(meUser()||{role:''}))})</span> <button class="linkbtn" onclick="logout()">Выйти</button> <span class="lang"><button class="${state.ui==='ru'?'on':''}" onclick="setUI('ru')">RU</button><button class="${state.ui==='uz'?'on':''}" onclick="setUI('uz')">UZ</button></span> <span id="syncBadge" class="syncb"></span> <span class="credit-top">${CREDIT}</span>`;
   badge();
   $('title').textContent=PAGES[state.page];
   const a=$('actions'),v=$('view');a.innerHTML='';
@@ -1389,6 +1393,17 @@ const ICON={
   tool:'<path d="M14.7 6.3a4 4 0 0 0-5.4 5.1L3 17.7 6.3 21l6.3-6.3a4 4 0 0 0 5.1-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>'
 };
 const ic=k=>`<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICON[k]}</svg>`;
+/* подпись разработчика: зашита в программу, не хранится в настройках и не редактируется */
+const CREDIT='by ULA Product';
+function ensureCredit(){
+  const b=$('brand'),w=$('whobar');
+  [[b,'credit'],[w,'credit-top']].forEach(([host,cls])=>{
+    if(!host)return;let el=host.querySelector('.'+cls);
+    if(!el){el=document.createElement(host===b?'div':'span');el.className=cls;host.appendChild(el)}
+    if(el.textContent!==CREDIT)el.textContent=CREDIT;
+  });
+}
+setInterval(ensureCredit,3000);
 const brandTxt=n=>esc(n).replace('&amp;','<span class="amp">&amp;</span>');
 const formName=s=>s.formName||s.name;
 const logoBig=s=>s.logo?`<img class="s-logo-img" src="${attr(s.logo)}" alt="${attr(s.name)}">`:`<div class="s-logo">${esc(formName(s)).replace('&amp;','<b>&amp;</b>')}</div>`;
@@ -1740,7 +1755,7 @@ function settingsView(){
     <div class="row"><button class="btn" onclick="saveSettings()">Сохранить настройки</button></div></div>`}
   if(t==='staff')body=staffPanel()+servicesPanel();
   if(t==='src')body=srcPanel();
-  if(t==='sec')body=pinPanel()+backupPanel()+installPanel();
+  if(t==='sec')body=pinPanel()+backupPanel()+installPanel()+`<div class="panel"><h2>О программе</h2><p style="margin:0"><b>${CREDIT}</b></p><p class="note" style="margin:4px 0 0">Версия ${BUILD}</p></div>`;
   return tabs+body;
 }
 function pickSlipLogo(inp){
@@ -1952,7 +1967,7 @@ function payDo(id){
 function showLogin(msg,login){
   const s=state.set;
   $('loginWrap').style.display='flex';
-  $('loginWrap').innerHTML=`<div class="lcard"><div class="lbrand">${s.logo?`<img src="${attr(s.logo)}" alt="${attr(s.name)}">`:`<b>${brandTxt(s.name)}</b>`}</div><h2>Вход в систему</h2>
+  $('loginWrap').innerHTML=`<div class="lcard"><div class="lbrand">${s.logo?`<img src="${attr(s.logo)}" alt="${attr(s.name)}">`:`<b>${brandTxt(s.name)}</b>`}<div class="credit-login">${CREDIT}</div></div><h2>Вход в систему</h2>
     <label>Логин</label><input id="lg-login" value="${attr(login||'')}" autocomplete="username" onkeydown="if(event.key==='Enter')$('lg-pass').focus()">
     <label>Пароль</label><input id="lg-pass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
     <p id="lg-err" class="low">${esc(msg||'')}</p>
@@ -2244,7 +2259,7 @@ function showUpdateBar(){
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();window.__pwaPrompt=e});
 window.addEventListener('appinstalled',()=>{window.__pwaPrompt=null});
 function pwaInstall(){const e=window.__pwaPrompt;if(!e)return;e.prompt();e.userChoice.finally(()=>{window.__pwaPrompt=null;render()})}
-const BUILD='2026-11-10.23';
+const BUILD='2026-11-10.24';
 function installPanel(){
   const web=window.isSecureContext&&/^https?:/.test(location.protocol);
   return `<div class="panel"><h2>Установить как приложение</h2><p class="note" style="margin-top:0">На телефоне: меню браузера, затем «Установить приложение» или «Добавить на главный экран». На компьютере: значок установки в адресной строке Chrome или Edge. Работает, когда программа открыта по обычному адресу сайта (https).${web?'':' Сейчас программа открыта как файл, установка недоступна.'}</p>${window.__pwaPrompt?'<div class="row"><button class="btn" onclick="pwaInstall()">Установить</button></div>':''}<p class="note">Версия программы: ${BUILD}</p><div class="row" style="justify-content:flex-start"><button class="btn ghost" onclick="checkUpdate(true)">Проверить обновление</button></div></div>`;
@@ -2306,7 +2321,7 @@ function trySyncApply(){
 }
 function connCard(inner){
   const s=state.set;$('loginWrap').style.display='flex';
-  $('loginWrap').innerHTML=`<div class="lcard"><div class="lbrand">${s.logo?`<img src="${attr(s.logo)}" alt="${attr(s.name)}">`:`<b>${brandTxt(s.name)}</b>`}</div>${inner}</div>`;
+  $('loginWrap').innerHTML=`<div class="lcard"><div class="lbrand">${s.logo?`<img src="${attr(s.logo)}" alt="${attr(s.name)}">`:`<b>${brandTxt(s.name)}</b>`}<div class="credit-login">${CREDIT}</div></div>${inner}</div>`;
 }
 function cleanState(){
   ['orders','parts','phones','acc','accSales','stockSales','cash','contacts','suppliers','adjust','log','returns','writeoffs','cancellations','notes','slips','price','cnotes'].forEach(k=>state[k]=[]);
