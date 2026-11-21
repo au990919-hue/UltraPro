@@ -139,10 +139,12 @@ function staffRule(u, S, o, cur) {
       if (o.op === 'del' && /^(sale|return):/.test((cur && cur.ref) || '')) return allow('cancelSale') || allow('cashEdit') || allow('refund');
       return allow('cashEdit');
     case 'orders': {
-      if (isNew) return true;
+      if (isNew) { o.v.acceptBy = u.id; return true; }   // «принял» ставится сервером по входу, подделать нельзя
       if (o.op === 'del') return cur.status === 'Принят' && allow('delOrder');
       const ch = diffKeys(cur, v);
-      if (cur.status === 'Выдан') return ch.every(k => k === 'comment') && (!ch.length || allow(null));   // комментарий выданного заказа: только после ввода кода владельца
+      if (cur.status === 'Выдан') return ch.every(k => k === 'comment' || k === 'acceptBy' || k === 'issuedBy') && (!ch.length || allow(null));   // комментарий выданного заказа: только после ввода кода владельца
+      if (ch.includes('acceptBy') && !allow(null)) return false;                       // сменить «принял» можно только по коду владельца
+      if (o.v.status === 'Выдан') o.v.issuedBy = u.id;                                   // «выдал» тоже ставит сервер
       if (JSON.stringify(cur.items || null) !== JSON.stringify(v.items || null)) {      // услуги и мастера
         if (!['Принят','Диагностика','В работе'].includes(cur.status)) return false;     // после «Готов» услуги не меняют
         const sum = a => (a || []).reduce((t, i) => t + (+i.price || 0), 0);
