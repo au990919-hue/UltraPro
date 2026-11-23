@@ -137,6 +137,7 @@ function staffRule(u, S, o, cur) {
     case 'cash':
       if (isNew) {
         if (v && v.cat === 'resTop') return false;                                    // пополнение резерва только владелец
+        if (v && v.xfer && !perm('xfer')) return false;                              // перемещение денег: только с правом «xfer»
         if (v && v.reg === 'res') {                                                    // резерв: не меньше нуля и не больше лимита
           const bal = ((db.state.cash || []).filter(c => c.reg === 'res').reduce((t, c) => t + (+c.sum || 0), 0)) + (+v.sum || 0);
           const cap = +((db.state.set || {}).resCap) || 0;
