@@ -135,7 +135,15 @@ function staffRule(u, S, o, cur) {
       if (isNew) { o.v.by = u.id; return true; }
       return !!cur && (cur.by === u.id || allow('cancelSale'));
     case 'cash':
-      if (isNew) return true;
+      if (isNew) {
+        if (v && v.cat === 'resTop') return false;                                    // пополнение резерва только владелец
+        if (v && v.reg === 'res') {                                                    // резерв: не меньше нуля и не больше лимита
+          const bal = ((db.state.cash || []).filter(c => c.reg === 'res').reduce((t, c) => t + (+c.sum || 0), 0)) + (+v.sum || 0);
+          const cap = +((db.state.set || {}).resCap) || 0;
+          if (bal < 0 || ((+v.sum || 0) > 0 && (!cap || bal > cap))) return false;
+        }
+        return true;
+      }
       if (o.op === 'del' && /^(sale|return):/.test((cur && cur.ref) || '')) return allow('cancelSale') || allow('cashEdit') || allow('refund');
       return allow('cashEdit');
     case 'orders': {
